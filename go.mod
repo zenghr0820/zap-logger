@@ -1,4 +1,4 @@
-module zap-logger
+module github.com/zenghr0820/zap-logger
 
 go 1.14
 

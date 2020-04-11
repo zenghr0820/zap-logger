@@ -18,16 +18,16 @@ var (
 	mainLogger *Logger
 )
 
-type LoggerConfig struct {
+type Config struct {
 	Name    string
 	Dir     string
 	Level   string
 	EnvMode string
 }
 
-func InitLog(config *LoggerConfig) {
+func InitLog(config *Config) {
 	if config == nil {
-		config = &LoggerConfig{
+		config = &Config{
 			Name:    "zap-logger",
 			Dir:     "",
 			Level:   "INFO",
