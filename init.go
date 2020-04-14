@@ -58,13 +58,32 @@ func InitLog(config *Config) {
 		encoder = zapcore.NewJSONEncoder(encoderConfig)
 	}
 
+	// 设置级别
+	logLevel := zap.DebugLevel
+	switch config.Level {
+	case "debug":
+		logLevel = zap.DebugLevel
+	case "info":
+		logLevel = zap.InfoLevel
+	case "warn":
+		logLevel = zap.WarnLevel
+	case "error":
+		logLevel = zap.ErrorLevel
+	case "panic":
+		logLevel = zap.PanicLevel
+	case "fatal":
+		logLevel = zap.FatalLevel
+	default:
+		logLevel = zap.InfoLevel
+	}
+
 	// 实现两个判断日志等级的interface
 	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.WarnLevel
+		return lvl < zapcore.WarnLevel && lvl >= logLevel
 	})
 
 	warnLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.WarnLevel
+		return lvl >= zapcore.WarnLevel && lvl >= logLevel
 	})
 
 	// 获取 info、warn日志文件的io.Writer 抽象 getWriter() 在下方实现
