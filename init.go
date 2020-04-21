@@ -3,6 +3,7 @@ package logger
 import (
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/lestrrat-go/file-rotatelogs"
@@ -20,7 +21,7 @@ var (
 type LogLevel string
 
 func (logLevel LogLevel) String() string {
-	return string(logLevel)
+	return strings.ToUpper(string(logLevel))
 }
 
 const (
@@ -43,7 +44,7 @@ func InitLog(config *Config) {
 		config = &Config{
 			Name:    "zap-logger",
 			Dir:     "",
-			Level:   "INFO",
+			Level:   InfoLevel,
 			EnvMode: "dev",
 		}
 	}
@@ -156,7 +157,7 @@ func getWriter(filename string) io.Writer {
 func convertLogLevel(logLevel LogLevel) zapcore.Level {
 	// 不区分大小写
 	var level zapcore.Level
-	switch logLevel {
+	switch LogLevel(logLevel.String()) {
 	case DebugLevel:
 		level = zap.DebugLevel
 	case InfoLevel:
