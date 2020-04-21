@@ -3,7 +3,6 @@ package logger
 import (
 	"io"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/lestrrat-go/file-rotatelogs"
@@ -18,10 +17,24 @@ var (
 	mainLogger *Logger
 )
 
+type LogLevel string
+
+func (logLevel LogLevel) String() string {
+	return string(logLevel)
+}
+
+const (
+	DebugLevel LogLevel = "DEBUG"
+	InfoLevel  LogLevel = "INFO"
+	WarnLevel  LogLevel = "WARN"
+	ErrorLevel LogLevel = "ERROR"
+	FatalLevel LogLevel = "FATAL"
+)
+
 type Config struct {
 	Name    string
 	Dir     string
-	Level   string
+	Level   LogLevel
 	EnvMode string
 }
 
@@ -59,23 +72,7 @@ func InitLog(config *Config) {
 	}
 
 	// 设置级别
-	logLevel := zap.DebugLevel
-	switch config.Level {
-	case "debug":
-		logLevel = zap.DebugLevel
-	case "info":
-		logLevel = zap.InfoLevel
-	case "warn":
-		logLevel = zap.WarnLevel
-	case "error":
-		logLevel = zap.ErrorLevel
-	case "panic":
-		logLevel = zap.PanicLevel
-	case "fatal":
-		logLevel = zap.FatalLevel
-	default:
-		logLevel = zap.InfoLevel
-	}
+	logLevel := convertLogLevel(config.Level)
 
 	// 实现两个判断日志等级的interface
 	infoLevel := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -101,8 +98,12 @@ func InitLog(config *Config) {
 		panic("[文件夹不存在] " + loggerPath)
 	}
 
+	warnWriterFileName := loggerPath + "/common-error.log"
+	if len(appName) > 0 {
+		warnWriterFileName = loggerPath + "/" + appName + "-common-error.log"
+	}
 	infoWriter := getWriter(loggerPath + "/" + appName + ".log")
-	warnWriter := getWriter(loggerPath + "/common-error.log")
+	warnWriter := getWriter(warnWriterFileName)
 
 	writeConsole := zapcore.AddSync(os.Stdout)
 	writeInfoFile := zapcore.AddSync(infoWriter)
@@ -152,20 +153,19 @@ func getWriter(filename string) io.Writer {
 }
 
 // 把字符串转换为日志级别（数字）
-func convertLogLevel(levelStr string) zapcore.Level {
+func convertLogLevel(logLevel LogLevel) zapcore.Level {
 	// 不区分大小写
-	levelStr = strings.ToLower(levelStr)
 	var level zapcore.Level
-	switch levelStr {
-	case "debug":
+	switch logLevel {
+	case DebugLevel:
 		level = zap.DebugLevel
-	case "info":
+	case InfoLevel:
 		level = zap.InfoLevel
-	case "warn":
+	case WarnLevel:
 		level = zap.WarnLevel
-	case "error":
+	case ErrorLevel:
 		level = zap.ErrorLevel
-	case "fatal":
+	case FatalLevel:
 		level = zap.FatalLevel
 	default:
 		level = zap.InfoLevel
