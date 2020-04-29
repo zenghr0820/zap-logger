@@ -22,10 +22,10 @@ import (
 )
 
 func main() {
-	logger.InitLog(&logger.Config{
+	logger := zapLogger.InitLog(&zapLogger.Config{
 		Name:    "demo",
 		Dir:     "",
-		Level:   "info",
+		Level:   zapLogger.InfoLevel,
 		EnvMode: "dev",
 	})
 	logger.Info("Info...", 1)

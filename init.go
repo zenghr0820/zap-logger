@@ -1,4 +1,4 @@
-package logger
+package zapLogger
 
 import (
 	"io"
@@ -9,13 +9,6 @@ import (
 	"github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-)
-
-var (
-	zapLogger *zap.Logger
-	zapSugar  *zap.SugaredLogger
-	// mainLogger default logger, with unit filed valued "main"
-	mainLogger *Logger
 )
 
 type LogLevel string
@@ -37,15 +30,17 @@ type Config struct {
 	Dir     string
 	Level   LogLevel
 	EnvMode string
+	Skip    int
 }
 
-func InitLog(config *Config) {
+func InitLog(config *Config) Logger {
 	if config == nil {
 		config = &Config{
 			Name:    "zap-logger",
 			Dir:     "",
 			Level:   InfoLevel,
 			EnvMode: "dev",
+			Skip:    1,
 		}
 	}
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
@@ -106,15 +101,16 @@ func InitLog(config *Config) {
 	infoWriter := getWriter(loggerPath + "/" + appName + ".log")
 	warnWriter := getWriter(warnWriterFileName)
 
-	writeConsole := zapcore.AddSync(os.Stdout)
+	writeInfoConsole := zapcore.AddSync(os.Stdout)
 	writeInfoFile := zapcore.AddSync(infoWriter)
+	writeWarnConsole := zapcore.AddSync(os.Stderr)
 	writeWarnFile := zapcore.AddSync(warnWriter)
 
 	var wsInfo zapcore.WriteSyncer
 	var wsWarn zapcore.WriteSyncer
 	if config.EnvMode == "dev" {
-		wsInfo = zapcore.NewMultiWriteSyncer(writeConsole, writeInfoFile)
-		wsWarn = zapcore.NewMultiWriteSyncer(writeConsole, writeWarnFile)
+		wsInfo = zapcore.NewMultiWriteSyncer(writeInfoConsole, writeInfoFile)
+		wsWarn = zapcore.NewMultiWriteSyncer(writeWarnConsole, writeWarnFile)
 	} else {
 		wsInfo = zapcore.NewMultiWriteSyncer(writeInfoFile)
 		wsWarn = zapcore.NewMultiWriteSyncer(writeWarnFile)
@@ -129,11 +125,10 @@ func InitLog(config *Config) {
 	// 开启开发模式，堆栈跟踪 需要传入 zap.AddCaller() 才会显示打日志点的文件名和行数, 有点小坑
 	caller := zap.AddCaller()
 	// 防止zap始终将包装器代码报告为调用者( 需要跳过一个级别，否则打印的文件名和行号 是封装的文件名)
-	skip := zap.AddCallerSkip(1)
+	skip := zap.AddCallerSkip(config.Skip)
 
-	zapLogger = zap.New(core, caller, skip)
-	zapSugar = zapLogger.Sugar()
-	mainLogger = NewLoggerOf()
+	zapLogger := zap.New(core, caller, skip)
+	return NewLoggerOf(zapLogger.Sugar())
 }
 
 func getWriter(filename string) io.Writer {
