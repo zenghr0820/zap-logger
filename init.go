@@ -43,6 +43,10 @@ func InitLog(config *Config) Logger {
 			Skip:    1,
 		}
 	}
+	encodeCaller := zapcore.FullCallerEncoder
+	if config.EnvMode != "prod" {
+		encodeCaller = zapcore.ShortCallerEncoder // 只显示 package/file.go:line
+	}
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
 	encoderConfig := zapcore.EncoderConfig{
 		MessageKey:  "msg",
@@ -53,7 +57,7 @@ func InitLog(config *Config) Logger {
 			enc.AppendString(t.Format("2006-01-02 15:04:05.000"))
 		},
 		CallerKey:    "file",
-		EncodeCaller: zapcore.ShortCallerEncoder,
+		EncodeCaller: encodeCaller,
 		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
 			enc.AppendInt64(int64(d) / 1000000)
 		},
