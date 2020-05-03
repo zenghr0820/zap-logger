@@ -43,9 +43,11 @@ func InitLog(config *Config) Logger {
 			Skip:    1,
 		}
 	}
-	encodeCaller := zapcore.FullCallerEncoder
-	if config.EnvMode != "prod" {
+	var encodeCaller zapcore.CallerEncoder
+	if config.EnvMode != "dev" {
 		encodeCaller = zapcore.ShortCallerEncoder // 只显示 package/file.go:line
+	} else {
+		encodeCaller = zapcore.FullCallerEncoder
 	}
 	// 设置一些基本日志格式 具体含义还比较好理解，直接看zap源码也不难懂
 	encoderConfig := zapcore.EncoderConfig{
