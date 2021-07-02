@@ -3,67 +3,99 @@
 
 
 
-# 功能
+## 功能
 
 - [x] 根据info/warn级别切割日志文件
 - [x] 根据时间切割日志文件
 - [x] 自动格式化 format
 - [x] 根据运行环境，切换输出格式，是否输出控制台
+- [x] 提供默认的日志记录器和生成另一个日志记录器
 
 
 
-# 使用
+## 使用默认的日志记录器
 
 **```go get -u github.com/zenghr0820/zap-logger```**
 
 ```go
+package main
+
 import (
-	logger "github.com/zenghr0820/zap-logger"
+	"github.com/zenghr0820/zap-logger"
 )
 
 func main() {
-	logger := zapLogger.InitLog(&zapLogger.Config{
-		Name:    "demo",
-		Dir:     "",
-		Level:   zapLogger.InfoLevel,
-		EnvMode: "dev",
-	})
-	logger.Info("Info...", 1)
-	logger.Warn("Warn...", 2)
-	logger.Error("Error...", 3)
-	logger.Debug("Debug...", 4)
+	zapLogger.Info("Info...", 1)
+	zapLogger.Infof("Infof -> %d", 1)
+	zapLogger.Warn("Warn...", 2)
+	zapLogger.Error("Error...", 3)
+	zapLogger.Debug("Debug...", 4)
+	// 开启 JSON 格式化输出
+	zapLogger.Config.SetJsonFormat(true)
+	// 更新配置
+	zapLogger.WithConfig()
+	zapLogger.Info("Info...", 5)
+	zapLogger.Infof("Infof -> %d", 5)
+	zapLogger.Warn("Warn...", 6)
+	zapLogger.Error("Error...", 7)
+	zapLogger.Debug("Debug...", 8)
 }
+
 ```
 
+**控制台输出**
 
-
-# 输出
-
-#### 一、 dev 环境输出
-```bash
-2020-04-11 17:35:37	INFO	Ex/main.go:14	Info...1
-2020-04-11 17:35:37	WARN	Ex/main.go:15	Warn...2
-2020-04-11 17:35:37	ERROR	Ex/main.go:16	Error...3
-2020-04-11 17:35:37	DEBUG	Ex/main.go:17	Debug...4
+```
+[2021-07-02 15:13:29.904]	[INFO]	logger/main.go:8	Info...1
+[2021-07-02 15:13:29.905]	[INFO]	logger/main.go:9	Infof -> 1
+{"level":"[INFO]","ts":"[2021-07-02 15:13:29.905]","file":"logger/main.go:17","msg":"Info...5"}
+{"level":"[INFO]","ts":"[2021-07-02 15:13:29.905]","file":"logger/main.go:18","msg":"Infof -> 5"}
+[2021-07-02 15:13:29.905]	[WARN]	logger/main.go:10	Warn...2
+[2021-07-02 15:13:29.905]	[ERROR]	logger/main.go:11	Error...3
+{"level":"[WARN]","ts":"[2021-07-02 15:13:29.905]","file":"logger/main.go:19","msg":"Warn...6"}
+{"level":"[ERROR]","ts":"[2021-07-02 15:13:29.905]","file":"logger/main.go:20","msg":"Error...7"}
 ```
 
+**默认的日志记录器只开启控制台输出，如需要开启文件输出，可以开启默认文件输出或者自定义文件输出配置**
 
-
-#### 二、格式化输出
-
-```bash
-{"level":"INFO","ts":"2020-04-11 17:40:43","file":"Ex/main.go:14","msg":"Info...1"}
-{"level":"DEBUG","ts":"2020-04-11 17:40:43","file":"Ex/main.go:17","msg":"Debug...4"}
+```go
+// 开启文件输出
+zapLogger.Config.EnableFileOut()
+// 更新配置
+zapLogger.WithConfig()
 ```
 
+**自定义文件输出**
 
+```go
+// 开启文件输出
+zapLogger.Config.SetFileOut("/logs", 7, 24)
+// 更新配置
+zapLogger.WithConfig()
+```
 
-#### 三、生成文件
+参数说明：
 
-```bash
-common-error.log
-common-error.log.2020-04-11
-demo.log
-demo.log.2020-04-11
+- path：日志文件输出保存路径，默认保存至 `/logs`
+- maxAge：保存 maxAge 天内的日志，默认保存 7 天内
+- rotationTime：每 rotationTime 分割一次日志，默认 1 天分割一次
+
+## 新建日志记录器
+
+```go
+package main
+
+import (
+	"github.com/zenghr0820/zap-logger/logger"
+)
+
+func main() {
+	l := logger.New()
+	l.Info("Info...", 1)
+	l.Infof("Infof -> %d", 1)
+	l.Warn("Warn...", 2)
+	l.Error("Error...", 3)
+	l.Debug("Debug...", 4)
+}
 ```
 
