@@ -90,7 +90,7 @@ import (
 )
 
 func main() {
-	l := logger.New()
+	l := logger.New(nil)
 	l.Info("Info...", 1)
 	l.Infof("Infof -> %d", 1)
 	l.Warn("Warn...", 2)

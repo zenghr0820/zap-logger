@@ -15,9 +15,12 @@ type Logger struct {
 	zapSugar *zap.SugaredLogger
 }
 
-func New() *Logger {
+func New(config *Config) *Logger {
+	if config == nil {
+		config = defaultConfig()
+	}
 	logger := &Logger{
-		Config: initConfig(),
+		Config: config,
 	}
 
 	// 根据环境设置 输出格式
@@ -25,7 +28,6 @@ func New() *Logger {
 		logger.Config.jsonFormat = true
 		logger.Config.consoleOut = false
 	}
-
 	// 设置 logger
 	logger.WithConfig()
 
@@ -73,7 +75,21 @@ func (l *Logger) generateEncoderConfig() zapcore.EncoderConfig {
 
 	// 自定义日志级别显示
 	customLevelEncoder := func(level zapcore.Level, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString("[" + level.CapitalString() + "]")
+		var levelStr = "[" + level.CapitalString() + "]"
+		if l.Config.colorful {
+			switch level.CapitalString() {
+			case "INFO":
+				levelStr = Green + levelStr + Reset
+				break
+			case "WARN", "DEBUG":
+				levelStr = Magenta + levelStr + Reset
+				break
+			case "ERROR", "PANIC":
+				levelStr = Red + levelStr + Reset
+				break
+			}
+		}
+		enc.AppendString(levelStr)
 	}
 
 	// 自定义文件：行号输出项
@@ -232,3 +248,8 @@ func (l *Logger) Panic(args ...interface{}) {
 func (l *Logger) Panicf(template string, args ...interface{}) {
 	l.zapSugar.Panicf(template, args...)
 }
+
+// Panicf package sugar of zap
+// func (l *Logger) Printf(format string, v ...interface{}) {
+// 	l.zapSugar.Infof(format, v)
+// }

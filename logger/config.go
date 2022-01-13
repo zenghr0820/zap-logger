@@ -8,6 +8,7 @@ type Config struct {
 	skip       int  // CallerSkip次数
 	jsonFormat bool // 是否输出 json
 	consoleOut bool // 是否输出到控制台
+	colorful   bool
 	fileOut    *fileOutConfig
 }
 
@@ -19,7 +20,7 @@ type fileOutConfig struct {
 	rotationTime uint   // 日志切割时间间隔(小时)
 }
 
-func initConfig() *Config {
+func defaultConfig() *Config {
 	return &Config{
 		name:       "zap-logger",
 		level:      InfoLevel,
@@ -53,6 +54,10 @@ func (c *Config) SetJsonFormat(jsonFormat bool) {
 
 func (c *Config) SetConsoleOut(consoleOut bool) {
 	c.consoleOut = consoleOut
+}
+
+func (c *Config) SetColorful(colorful bool) {
+	c.colorful = colorful
 }
 
 func (c *Config) EnableFileOut() {

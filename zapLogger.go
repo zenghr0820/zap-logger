@@ -10,7 +10,7 @@ var (
 )
 
 func init() {
-	log = logger.New()
+	log = logger.New(nil)
 	Config = log.Config
 }
 
